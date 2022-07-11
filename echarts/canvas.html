@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <canvas id="c" width="300" height="300" style="border: 1px solid #ccc;"></canvas>
+
+    <script>
+        window.cnv = document.getElementById('c')
+        window.cxt = cnv.getContext('2d')
+
+        // 第一条线
+        cxt.moveTo(20, 100)
+        cxt.lineTo(200, 100)
+        cxt.lineWidth = 10
+        cxt.strokeStyle = 'pink'
+        cxt.stroke()
+
+        // 第二条线
+        cxt.moveTo(20, 120.5)
+        cxt.lineTo(200, 120.5)
+        cxt.stroke();
+    </script>
+</body>
+
+</html>
