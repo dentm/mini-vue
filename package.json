@@ -1,0 +1,27 @@
+{
+  "name": "mini-vue",
+  "version": "1.0.0",
+  "description": "尝试实现一个reactive",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qqliuernjun/mini-vue.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/qqliuernjun/mini-vue/issues"
+  },
+  "homepage": "https://github.com/qqliuernjun/mini-vue#readme",
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "@types/node": "^18.0.6"
+  }
+}
