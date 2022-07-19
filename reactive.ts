@@ -15,6 +15,24 @@ function reactive<T extends object, K extends string | symbol>(obj: T) {
     }
     return new Proxy(obj, handler)
 }
+function ref<T>(val: T) {
+    const r = {
+        get value() {
+            track(r, 'value')
+            return val
+        },
+        set value(newVal) {
+            val = newVal;
+            trigger(r, 'value')
+        }
+    }
+    return r
+}
+function computed(getter: Function) {
+    const r = ref(0);
+    effect(() => r.value = getter())
+    return r;
+}
 function track<T extends object, K extends string | symbol>(target: T, prop: K): void {
     if (activeEffect) {
         if (!weakMap.get(target)) {
@@ -48,20 +66,6 @@ const effect = (fn: Function) => {
     activeEffect = null;
 }
 
-function ref(val: any) {
-    const r = {
-        get value() {
-            track(r, 'value')
-            return val
-        },
-        set value(newVal) {
-            val = newVal;
-            trigger(r, 'value')
-        }
-    }
-    return r
-}
-
 const weakMap: WeakMap<object, any> = new WeakMap();
 
 const product = reactive({
@@ -69,22 +73,21 @@ const product = reactive({
     quantity: 10
 })
 
-let total = 0;
-let sale = ref(0);
-
-
-effect(() => {
-    sale.value = product.price * 0.9
+const sale = computed(() => {
+    return product.price * 0.9
 })
 
-effect(() => {
-    total = sale.value * product.quantity
+const total = computed(() => {
+    return sale.value * product.quantity
 })
 
-console.log(total);
+
+console.log(total.value);
+
+product.quantity = 20
+
+console.log(total.value);
 
 product.price = 10
 
-console.log(total);
-
-
+console.log(total.value);
