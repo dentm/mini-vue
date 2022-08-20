@@ -106,31 +106,28 @@ function patchNode(oldVNode, newVNode){
                     patchNode(oldChildren[i], newChildren[i]);
                 }
 
-                // if(oldChildren.length > newChildren.length) {
-                //     oldChildren.slice(newChildren.length).forEach(child=>{
-                //         el.removeChild(child.el)
-                //     })
-                // }
+                if(oldChildren.length > newChildren.length) {
+                    oldChildren.slice(newChildren.length).forEach(child=>{
+                        el.removeChild(child.el)
+                    })
+                }
 
-                // if(oldChildren.length < newChildren.length) {
-                //     newChildren.slice(oldChildren.length).forEach(child => {
-                //         mount(child, el)
-                //     }) 
-                // }
+                if(oldChildren.length < newChildren.length) {
+                    newChildren.slice(oldChildren.length).forEach(child => {
+                        mount(child, el)
+                    }) 
+                }
 
             }
         }
     } else {
         let el = oldVNode.el;
         let parentNode = el.parentNode
-        parentNode.innerHTML = '';
+        parentNode.removeChild(el);
         mount(newVNode, parentNode);
     }
 }
 
 patchNode(vnode, newVNode);
-
-console.log(vnode);
-console.log(newVNode);
 
 </script>
