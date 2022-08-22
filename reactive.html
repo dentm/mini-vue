@@ -1,0 +1,63 @@
+<script>
+    let activeEffect = null;
+    class Dep{
+        subscribes = new Set();
+        depend(){
+            if(activeEffect){
+                this.subscribes.add(activeEffect);
+            }
+        }
+        notify(){
+            this.subscribes.forEach(effect=>{
+                effect();
+            })
+        } 
+    }
+
+    function watchEffect(effect){
+        activeEffect = effect;
+        effect();
+        activeEffect = null;
+    } 
+let targetMap = new WeakMap();
+    function handler(){
+        return {
+            get(target, key, receiver){
+                let depMaps = targetMap.get(target);
+                if(!depMaps){
+                    depMaps = new Map();
+                    targetMap.set(target, depMaps);
+                }
+                let dep = depMaps.get(key);
+                if(!dep) {
+                    dep = new Dep();
+                    depMaps.set(key, dep);
+                }
+                dep.depend();
+                return Reflect.get(target, key, receiver)
+            },
+            set(target, key, value, receiver){
+                let depMaps = targetMap.get(target);
+                let dep = depMaps.get(key);   
+                let res =  Reflect.set(target, key, value, receiver);
+                dep.notify();
+                return res;
+            }
+        }
+    }
+
+    function reactive(raw){
+        return new Proxy(raw, handler());
+    }
+
+    const state = reactive({
+        count:0
+    })
+
+    watchEffect(() => {
+      console.log(state.count);
+    })
+
+    state.count++
+
+</script>
