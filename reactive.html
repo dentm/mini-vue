@@ -19,7 +19,7 @@
         effect();
         activeEffect = null;
     } 
-let targetMap = new WeakMap();
+    let targetMap = new WeakMap();
     function handler(){
         return {
             get(target, key, receiver){

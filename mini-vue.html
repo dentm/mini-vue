@@ -1,0 +1,203 @@
+<div id="app">
+
+</div>
+
+<script>
+    // vdom
+    function h(tag, props, children){
+    return {
+        tag,
+        props,
+        children
+    }
+}
+
+    function mount(vnode, container){
+    if(typeof vnode === 'string') {
+        container.appendChild(document.createTextNode(vnode));
+        return
+    }
+    const el = vnode.el =  document.createElement(vnode.tag);
+
+    if(vnode.props){
+        for(const key in vnode.props){
+            if(key.startsWith('on')){
+                el.addEventListener(key.slice(2).toLocaleLowerCase(), vnode.props[key])
+            } else {
+                el.setAttribute(key, vnode.props[key]);
+            }
+            
+        }
+
+
+    }
+    if(vnode.children) {
+        if(Array.isArray(vnode.children)){
+            vnode.children.forEach(child => {
+                mount(child, el);
+            });
+        } else {
+            el.appendChild(document.createTextNode(vnode.children));
+        }
+    }
+    
+    container.appendChild(el);
+
+}
+
+
+
+    function patchNode(oldVNode, newVNode){
+        if(oldVNode.tag === newVNode.tag){
+            let el = newVNode.el =  oldVNode.el;
+            // props
+            let oldProps = oldVNode.props || {};
+            let newProps = newVNode.props || {};
+
+            for(let key in newProps){
+                const oldValue = oldProps[key];
+                const newValue = newProps[key];
+                if(oldValue !== newValue){
+                    el.setAttribute(key, newValue);
+                }
+            }
+
+            for(let key in oldProps) {
+                if(!key in newProps){
+                    el.removeAttribute(key)
+                }
+            }
+
+            // children
+            let oldChildren = oldVNode.children;
+            let newChildren = newVNode.children;
+
+            if(typeof newChildren === 'string'){
+                if(typeof oldChildren === 'string') {
+                    if(oldChildren !== newChildren) {
+                        el.textContent = newChildren;
+                    }
+                } else {
+                    el.textContent = newChildren;
+                }
+            } else {
+                if(typeof oldChildren === 'string') {
+                    el.innerHTML = '';
+                    newChildren.forEach(child=>{
+                        mount(child, el)
+                    })
+                } else {
+                    const commonLength = Math.min(oldChildren.length, newChildren.length);
+
+                    for(let i = 0; i < commonLength; i++) {
+                        patchNode(oldChildren[i], newChildren[i]);
+                    }
+
+                    if(oldChildren.length > newChildren.length) {
+                        oldChildren.slice(newChildren.length).forEach(child=>{
+                            el.removeChild(child.el)
+                        })
+                    }
+
+                    if(oldChildren.length < newChildren.length) {
+                        newChildren.slice(oldChildren.length).forEach(child => {
+                            mount(child, el)
+                        }) 
+                    }
+
+                }
+            }
+        } else {
+            let el = oldVNode.el;
+            let parentNode = el.parentNode
+            parentNode.removeChild(el);
+            mount(newVNode, parentNode);
+        }
+    }
+
+    // reactive
+    let activeEffect = null;
+    class Dep{
+        subscribes = new Set();
+        depend(){
+            if(activeEffect){
+                this.subscribes.add(activeEffect);
+            }
+        }
+        notify(){
+            this.subscribes.forEach(effect=>{
+                effect();
+            })
+        } 
+    }
+
+    function watchEffect(effect){
+        activeEffect = effect;
+        effect();
+        activeEffect = null;
+    } 
+
+    let targetMap = new WeakMap();
+    function handler(){
+        return {
+            get(target, key, receiver){
+                let depMaps = targetMap.get(target);
+                if(!depMaps){
+                    depMaps = new Map();
+                    targetMap.set(target, depMaps);
+                }
+                let dep = depMaps.get(key);
+                if(!dep) {
+                    dep = new Dep();
+                    depMaps.set(key, dep);
+                }
+                dep.depend();
+                return Reflect.get(target, key, receiver)
+            },
+            set(target, key, value, receiver){
+                let depMaps = targetMap.get(target);
+                let dep = depMaps.get(key);   
+                let res =  Reflect.set(target, key, value, receiver);
+                dep.notify();
+                return res;
+            }
+        }
+    }
+
+    function reactive(raw){
+        return new Proxy(raw, handler());
+    }
+
+    const App = {
+        data: reactive({
+            count:0
+        }),
+        render(){
+            return h('span', {
+                onClick:()=>{
+                    this.data.count++;
+                }
+            }, String(this.data.count))
+        }
+    }
+
+    function mountApp(component, container){
+        let ismounted = false;
+        let prevdom = null;
+        watchEffect(()=>{
+            if(!ismounted) {
+                prevdom = component.render();
+                mount(prevdom,container);
+                ismounted = true;
+            } else {
+                let newdom = component.render();
+                patchNode(prevdom, newdom);
+                prevdom = newdom;
+            }
+        })
+    }
+
+    mountApp(App, document.getElementById('app'))
+
+
+</script>
